@@ -26,21 +26,3 @@ Add-Type -AssemblyName PresentationFramework
         ps.dispose();
     }
 }
-
-// export async function showConfirm() {
-//     try {
-//         const script = `
-//       Add-Type -AssemblyName PresentationFramework
-//       [System.Windows.MessageBox]::Show('Gap su co khi chay tool?', 'Confirm', 'YesNo', 'Question')
-//     `;
-//
-//         const result = await ps.invoke(script);
-//         console.log('User clicked:', result);
-//     } catch (err) {
-//         console.error(err);
-//     } finally {
-//         ps.dispose();
-//     }
-// }
-
-await showConfirm();

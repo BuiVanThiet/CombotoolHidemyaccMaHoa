@@ -1051,21 +1051,26 @@ async function getNextIndex(dir) {
 
 export async function getNextIndexFolder(parentPath) {
     try {
-        await fs.mkdir(parentPath, { recursive: true });
-        const folders = await fs.readdir(parentPath);
+        await fs.promises.mkdir(parentPath, { recursive: true });
+
+        const items = await fs.promises.readdir(parentPath, { withFileTypes: true });
 
         let maxIndex = 0;
-        folders.forEach(name => {
-            // Regex tìm số ở đầu chuỗi trước dấu gạch dưới (ví dụ: "1_abc" -> lấy 1)
-            const match = name.match(/^(\d+)_/);
+
+        for (const item of items) {
+            if (!item.isDirectory()) continue;
+
+            const match = item.name.match(/^(\d+)_/);
             if (match) {
-                const index = parseInt(match[1], 10);
+                const index = Number(match[1]);
                 if (index > maxIndex) maxIndex = index;
             }
-        });
+        }
 
         return maxIndex + 1;
-    } catch (error) {
+
+    } catch (e) {
+        console.error(e);
         return 1;
     }
 }
@@ -1593,22 +1598,22 @@ const ps = new PowerShell({
     noProfile: true
 });
 
-export async function showConfirm() {
-    try {
-        const script = `
-      Add-Type -AssemblyName PresentationFramework
-      [System.Windows.MessageBox]::Show('phat hien anh keo?', 'Confirm', 'YesNo', 'Question')
-    `;
-
-        const result = await ps.invoke(script);
-        console.log('User clicked:', result);
-        return result;
-    } catch (err) {
-        console.error(err);
-    } finally {
-        ps.dispose();
-    }
-}
+// export async function showConfirm() {
+//     try {
+//         const script = `
+//       Add-Type -AssemblyName PresentationFramework
+//       [System.Windows.MessageBox]::Show('phat hien anh keo?', 'Confirm', 'YesNo', 'Question')
+//     `;
+//
+//         const result = await ps.invoke(script);
+//         console.log('User clicked:', result);
+//         return result;
+//     } catch (err) {
+//         console.error(err);
+//     } finally {
+//         ps.dispose();
+//     }
+// }
 
 
 
@@ -1652,132 +1657,224 @@ export async function showConfirm() {
 //         clean: [...new Set(clean)],
 //     };
 // }
-export async function extractImageUrls(page, selector) {
+// export async function extractImageUrls(page, selector) {
+//     try {
+//         await page.waitForSelector(selector, { state: 'attached', timeout: 8000 });
+//     } catch (_) {
+//         // Nếu không tìm thấy selector, bỏ qua
+//     }
+//
+//     const base = await page.evaluate(() => location.href); // Lấy base URL của trang hiện tại
+//
+//     const raw = [];
+//     const clean = [];
+//
+//     const imgs = await page.locator(selector).elementHandles(); // Lấy các phần tử ảnh
+//
+//     for (const img of imgs) {
+//         const src = await img.evaluate((el) => {
+//             // Kiểm tra thuộc tính 'src'
+//             let src = el.getAttribute('src') || el.getAttribute('data-src') || '';
+//
+//             // Nếu không có 'src', kiểm tra 'srcset'
+//             if (!src) {
+//                 const ss = el.getAttribute('srcset');
+//                 if (ss) {
+//                     src = ss.split(',').pop()?.trim()?.split(' ')[0] || '';
+//                 }
+//             }
+//
+//             // Nếu không có 'src' hoặc 'srcset', kiểm tra trong 'style' (background-image)
+//             if (!src) {
+//                 const style = el.getAttribute('style');
+//                 if (style) {
+//                     const match = style.match(/background-image:\s*url\(["'](.*?)["']\)/);
+//                     if (match && match[1]) {
+//                         src = match[1];
+//                     }
+//                 }
+//             }
+//
+//             if (src)
+//
+//             return src;
+//         });
+//
+//         if (src) {
+//             const absSrc = new URL(src, base).toString();
+//             if (absSrc.includes('p16-oec-general-useast5')) {
+//                 const match = absSrc.match(/\.com\/(.*)~/);
+//
+//                 if (match && match[1]) {
+//                     const pathIdentifier = match[1]; // Kết quả: tos-useast5-i-omjb5zjo8w-tx/0f7ad264592e412badec4f484e9a48e7
+//
+//                     // Ghép thành link mới với đuôi origin-jpeg.jpeg
+//                     const newUrl = `https://p16-oec-general-useast5.ttcdn-us.com/${pathIdentifier}~tplv-fhlh96nyum-origin-jpeg.jpeg`;
+//
+//                     raw.push(newUrl);
+//                     clean.push(newUrl);
+//                 } else {
+//                     // Trường hợp không tìm thấy dấu ~, xử lý cắt query thủ công
+//                     const basePart = absSrc.split('~')[0];
+//                     const newUrl = `${basePart}~tplv-fhlh96nyum-origin-jpeg.jpeg`;
+//
+//                     raw.push(newUrl);
+//                     clean.push(newUrl);
+//                 }
+//             } else if (absSrc.includes('etsystatic')) {
+//                 const pattern = /il_\d+x[\dN]+/;
+//
+//                 if (pattern.test(absSrc)) {
+//                     // Thay thế cụm tìm được bằng il_fullxfull
+//                     const newUrl = absSrc.replace(pattern, 'il_fullxfull');
+//
+//                     raw.push(newUrl);
+//                     clean.push(newUrl);
+//                 } else {
+//                     // Nếu không tìm thấy định dạng il_... thì giữ nguyên hoặc xử lý tùy ý
+//                     raw.push(absSrc);
+//                     clean.push(absSrc);
+//                 }
+//             } else if (absSrc.includes('aliexpress-media')) {
+//                 const pattern = /(_\d+x\d+.*|_\.webp|_\.avif)$/;
+//
+//                 if (pattern.test(absSrc)) {
+//                     // Xóa phần đuôi bằng cách thay thế bằng chuỗi rỗng
+//                     const newUrl = absSrc.replace(pattern, '');
+//
+//                     raw.push(newUrl);
+//                     clean.push(newUrl);
+//                 } else {
+//                     raw.push(absSrc);
+//                     clean.push(absSrc);
+//                 }
+//             }  else {
+//                 // Các link bình thường không phải kalocdn
+//                 raw.push(absSrc);
+//                 clean.push(stripQuery(absSrc));
+//             }
+//
+//         }
+//     }
+//
+//     // Loại bỏ các URL trùng lặp
+//     return {
+//         raw: [...new Set(raw)],
+//         clean: [...new Set(clean)],
+//     };
+// }
+
+export async function extractImageUrls(page, selector, inputChange = null, outputChange = null) {
+
     try {
         await page.waitForSelector(selector, { state: 'attached', timeout: 8000 });
-    } catch (_) {
-        // Nếu không tìm thấy selector, bỏ qua
-    }
+    } catch (_) {}
 
-    const base = await page.evaluate(() => location.href); // Lấy base URL của trang hiện tại
+    const base = await page.evaluate(() => location.href);
 
     const raw = [];
     const clean = [];
 
-    const imgs = await page.locator(selector).elementHandles(); // Lấy các phần tử ảnh
+    const imgs = await page.locator(selector).elementHandles();
 
     for (const img of imgs) {
-        const src = await img.evaluate((el) => {
-            // Kiểm tra thuộc tính 'src'
-            let src = el.getAttribute('src') || el.getAttribute('data-src') || '';
 
-            // Nếu không có 'src', kiểm tra 'srcset'
-            if (!src) {
-                const ss = el.getAttribute('srcset');
-                if (ss) {
-                    src = ss.split(',').pop()?.trim()?.split(' ')[0] || '';
+        const src = await img.evaluate((el) => {
+
+            let url =
+                el.getAttribute("src") ||
+                el.getAttribute("data-src") ||
+                el.getAttribute("data-original") ||
+                el.getAttribute("href") ||
+                "";
+
+            // srcset
+            if (!url) {
+                const srcset = el.getAttribute("srcset") || el.getAttribute("data-srcset");
+                if (srcset) {
+                    url = srcset.split(",")[0].trim().split(" ")[0];
                 }
             }
 
-            // Nếu không có 'src' hoặc 'srcset', kiểm tra trong 'style' (background-image)
-            if (!src) {
-                const style = el.getAttribute('style');
+            // background-image
+            if (!url) {
+                const style = el.getAttribute("style");
                 if (style) {
-                    const match = style.match(/background-image:\s*url\(["'](.*?)["']\)/);
-                    if (match && match[1]) {
-                        src = match[1];
+                    const match = style.match(/url\(["']?(.*?)["']?\)/);
+                    if (match) {
+                        url = match[1];
                     }
                 }
             }
 
-            if (src)
-
-            return src;
+            return url || "";
         });
 
-        if (src) {
-            const absSrc = new URL(src, base).toString();
-            // raw.push(absSrc);
-            // clean.push(stripQuery(absSrc));
-            // Giả định absSrc là URL đầy đủ bạn vừa lấy được
-            if (absSrc.includes('kalocdn.com')) {
-                // Regex này tìm phần nằm sau 'images/' và kết thúc trước '.png'
-                const match = absSrc.match(/images\/(.*)\.png/);
+        if (!src) continue;
 
-                if (match && match[1]) {
-                    const pathIdentifier = match[1]; // Kết quả: tos-useast5-i-omjb5zjo8w-tx/57c09318db80415f838725773aaa2c88
+        let absSrc;
 
-                    // Ghép thành link mới theo format bạn yêu cầu
-                    const newUrl = `https://p16-oec-general-useast5.ttcdn-us.com/${pathIdentifier}~tplv-fhlh96nyum-origin-jpeg.jpeg`;
+        try {
+            absSrc = new URL(src, base).toString();
+        } catch {
+            continue;
+        }
 
-                    raw.push(newUrl);
-                    clean.push(newUrl); // Với loại link này thường không cần stripQuery nữa
-                } else {
-                    // Nếu không match được format, vẫn giữ link gốc
-                    raw.push(absSrc);
-                    clean.push(stripQuery(absSrc));
-                }
-            } else if (absSrc.includes('p16-oec-general-useast5')) {
-                // Regex này lấy phần từ sau domain cho đến trước dấu ngã (~)
-                // URL gốc: .../0f7ad264592e412badec4f484e9a48e7~tplv-fhlh96nyum-crop-webp...
-                const match = absSrc.match(/\.com\/(.*)~/);
+        // thêm https nếu thiếu
+        if (absSrc.startsWith("//")) {
+            absSrc = "https:" + absSrc;
+        }
 
-                if (match && match[1]) {
-                    const pathIdentifier = match[1]; // Kết quả: tos-useast5-i-omjb5zjo8w-tx/0f7ad264592e412badec4f484e9a48e7
+        // replace giống code Java
+        if (inputChange && outputChange) {
+            absSrc = absSrc.replace(new RegExp(inputChange, "g"), outputChange);
+        }
 
-                    // Ghép thành link mới với đuôi origin-jpeg.jpeg
-                    const newUrl = `https://p16-oec-general-useast5.ttcdn-us.com/${pathIdentifier}~tplv-fhlh96nyum-origin-jpeg.jpeg`;
+        // ===== custom xử lý domain =====
 
-                    raw.push(newUrl);
-                    clean.push(newUrl);
-                } else {
-                    // Trường hợp không tìm thấy dấu ~, xử lý cắt query thủ công
-                    const basePart = absSrc.split('~')[0];
-                    const newUrl = `${basePart}~tplv-fhlh96nyum-origin-jpeg.jpeg`;
+        if (absSrc.includes('p16-oec-general-useast5')) {
 
-                    raw.push(newUrl);
-                    clean.push(newUrl);
-                }
-            } else if (absSrc.includes('etsystatic')) {
-                const pattern = /il_\d+x[\dN]+/;
+            const match = absSrc.match(/\.com\/(.*)~/);
 
-                if (pattern.test(absSrc)) {
-                    // Thay thế cụm tìm được bằng il_fullxfull
-                    const newUrl = absSrc.replace(pattern, 'il_fullxfull');
+            if (match && match[1]) {
 
-                    raw.push(newUrl);
-                    clean.push(newUrl);
-                } else {
-                    // Nếu không tìm thấy định dạng il_... thì giữ nguyên hoặc xử lý tùy ý
-                    raw.push(absSrc);
-                    clean.push(absSrc);
-                }
-            } else if (absSrc.includes('aliexpress-media')) {
-                const pattern = /(_\d+x\d+.*|_\.webp|_\.avif)$/;
+                const pathIdentifier = match[1];
 
-                if (pattern.test(absSrc)) {
-                    // Xóa phần đuôi bằng cách thay thế bằng chuỗi rỗng
-                    const newUrl = absSrc.replace(pattern, '');
+                absSrc = `https://p16-oec-general-useast5.ttcdn-us.com/${pathIdentifier}~tplv-fhlh96nyum-origin-jpeg.jpeg`;
 
-                    raw.push(newUrl);
-                    clean.push(newUrl);
-                } else {
-                    raw.push(absSrc);
-                    clean.push(absSrc);
-                }
-            }  else {
-                // Các link bình thường không phải kalocdn
-                raw.push(absSrc);
-                clean.push(stripQuery(absSrc));
+            } else {
+
+                const basePart = absSrc.split('~')[0];
+                absSrc = `${basePart}~tplv-fhlh96nyum-origin-jpeg.jpeg`;
+
+            }
+
+        } else if (absSrc.includes('etsystatic')) {
+
+            const pattern = /il_\d+x[\dN]+/;
+
+            if (pattern.test(absSrc)) {
+                absSrc = absSrc.replace(pattern, 'il_fullxfull');
+            }
+
+        } else if (absSrc.includes('aliexpress-media')) {
+
+            const pattern = /(_\d+x\d+.*|_\.webp|_\.avif)$/;
+
+            if (pattern.test(absSrc)) {
+                absSrc = absSrc.replace(pattern, '');
             }
 
         }
+
+        raw.push(absSrc);
+        clean.push(stripQuery(absSrc));
+
     }
 
-    // Loại bỏ các URL trùng lặp
     return {
         raw: [...new Set(raw)],
-        clean: [...new Set(clean)],
+        clean: [...new Set(clean)]
     };
 }
 

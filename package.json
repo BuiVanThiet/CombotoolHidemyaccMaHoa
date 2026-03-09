@@ -9,6 +9,12 @@
   },
   "dependencies": {
     "axios": "^1.13.6",
-    "node-powershell": "^5.0.1"
+    "bluebird": "^3.7.2",
+    "exceljs": "^4.4.0",
+    "moment-timezone": "^0.6.0",
+    "node-powershell": "^5.0.1",
+    "playwright": "^1.58.2",
+    "sharp": "^0.34.5",
+    "xlsx": "^0.18.5"
   }
 }
