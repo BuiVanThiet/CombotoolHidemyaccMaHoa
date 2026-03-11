@@ -38,7 +38,7 @@ async function processSingleAcc(accName) {
     const productsOfAcc = groupedByAcc[accName];
 
     const profileId = await getIdAcc(accName);
-    const { browser, context } = await loginToProfile(hide, profileId, { x: 0, y: 0 });
+    const { browser, context } = await loginToProfile(hide, profileId);
 
     if (!browser || !context) return;
 
