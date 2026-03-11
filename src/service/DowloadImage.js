@@ -48,7 +48,7 @@ export async function dowloadImageBasic(page,product,elementTitle1,elementTitle2
             listboxImgsSelector = await elementMainImage2;
             elementImage = await page.$$(listboxImgsSelector);
             if (elementImage.length <= 0) {
-                listboxImgsSelector = "div.nla-listing-image.wt-width-full img.wt-width-full.wt-height-full";
+                listboxImgsSelector = "div#photos ul.wt-list-unstyled li img";
             }
         }
 
