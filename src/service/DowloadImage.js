@@ -39,7 +39,7 @@ export async function dowloadImageBasic(page,product,elementTitle1,elementTitle2
             .trim()
             .replace(/[^\p{L}\p{N}]+/gu, ' ')
             .replace(/\s+/g, ' ')
-            .substring(0, 200); // Giới hạn để tránh lỗi path quá dài
+            .substring(0, 100); // Giới hạn để tránh lỗi path quá dài
 
         // 3. Lấy link ảnh
         let listboxImgsSelector = await elementMainImage1;
