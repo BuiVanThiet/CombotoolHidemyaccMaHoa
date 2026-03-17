@@ -3,15 +3,14 @@ import {
     downloadImagesToFolder,
     ensureDirIfMissing,
     extractImageUrls,
-    getNextIndexFolder,
-    scrollAndClickElementByIndex
+    getNextIndexFolder, scrollAndClickElementByIndex
 } from "./BaseToolService.js";
 import {
     showConfirm
 } from "../service/ConfirmService.js";
 import path from "path";
 
-export async function dowloadImageBasic(page,product,elementTitle1,elementTitle2,elementMainImage1,elementMainImage2,elementSecurity,textCheckSecurity,inputChange,outputChange) {
+export async function dowloadImageFullV3(page,product,elementTitle1,elementTitle2,elementMainImage1,elementMainImage2,elementMainImageVersion1,elementMainImageVersion2,elementSecurity,textCheckSecurity,inputChange,outputChange) {
     // console.log(`[${moment().format('HH:mm:ss')}] Đang xử lý sản phẩm Etsy...`);
     await delayTime(2000);
 
@@ -42,25 +41,6 @@ export async function dowloadImageBasic(page,product,elementTitle1,elementTitle2
             .replace(/\s+/g, ' ')
             .substring(0, 100); // Giới hạn để tránh lỗi path quá dài
 
-        let linkProduct = await product["Link"].toLowerCase();
-        if (linkProduct.includes("shopee")) {
-            await scrollAndClickElementByIndex(page,'div.airUhU div.UBG7wZ',3);
-            await delayTime(2000);
-        }
-        // 3. Lấy link ảnh
-        let listboxImgsSelector = await elementMainImage1;
-        let elementImage = await page.$$(listboxImgsSelector);
-        if (elementImage.length <= 0) {
-            listboxImgsSelector = await elementMainImage2;
-            elementImage = await page.$$(listboxImgsSelector);
-            if (elementImage.length <= 0) {
-                listboxImgsSelector = "div#photos ul.wt-list-unstyled li img";
-            }
-        }
-
-        const { raw, clean } = await extractImageUrls(page, listboxImgsSelector,inputChange,outputChange);
-        const maxImgs = Number.isFinite(Number(product["max"])) ? Number(product["max"]) : 9999;
-
         // 4. XỬ LÝ ĐƯỜNG DẪN VÀ ĐÁNH SỐ THỨ TỰ (STT)
         const subFolder = product["Folder"] === 'notData' ? '' : `/${product["Folder"]}`;
         const parentPath = path.resolve(`../../Output/dowloadImage${subFolder}`);
@@ -74,6 +54,47 @@ export async function dowloadImageBasic(page,product,elementTitle1,elementTitle2
 
         // 5. Đảm bảo thư mục tồn tại và tải ảnh
         await ensureDirIfMissing(outputRoot);
+
+        let elementColorSelector = await elementMainImageVersion1;
+        let colorImgs = await page.$$(elementColorSelector);
+        if (colorImgs.length <= 0) {
+            elementColorSelector = await elementMainImageVersion1;
+            colorImgs = await page.$$(elementColorSelector);
+        }
+
+        if (colorImgs.length > 0) {
+            console.log(`Tìm thấy ${colorImgs.length} ảnh phân loại.`);
+
+            // Gán lại giá trị cho biến đã khai báo ở trên (không dùng let nữa)
+            let resultColor = await extractImageUrls(page, elementColorSelector,inputChange,outputChange);
+            let cleanColor = resultColor.clean;
+
+            let outputVersion = `${outputRoot}/version`;
+            await ensureDirIfMissing(outputVersion);
+
+            const list2 = await downloadImagesToFolder(cleanColor, outputVersion, { retries: 2, delayMs: 50 });
+            console.log("Đã tải xong ảnh version:", list2.length);
+        }
+
+        let linkProduct = await product["Link"].toLowerCase();
+        if (linkProduct.includes("shopee")) {
+            await scrollAndClickElementByIndex(page,'div.airUhU div.UBG7wZ',3);
+            await delayTime(2000);
+        }
+
+        // 3. Lấy link ảnh
+        let listboxImgsSelector = await elementMainImage1;
+        let elementImage = await page.$$(listboxImgsSelector);
+        if (elementImage.length <= 0) {
+            listboxImgsSelector = await elementMainImage2;
+            elementImage = await page.$$(listboxImgsSelector);
+            if (elementImage.length <= 0) {
+                listboxImgsSelector = "div.nla-listing-image.wt-width-full img.wt-width-full.wt-height-full";
+            }
+        }
+
+        const { raw, clean } = await extractImageUrls(page, listboxImgsSelector,inputChange,outputChange);
+        const maxImgs = Number.isFinite(Number(product["max"])) ? Number(product["max"]) : 9999;
 
         const list = await downloadImagesToFolder(
             clean.slice(0, maxImgs),

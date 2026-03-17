@@ -11,6 +11,12 @@ import {
 import {
     dowloadImageFull
 } from "../service/DowloadImageFull.js";
+import {
+    dowloadImageFullV2
+} from "../service/DowloadImageFullV2.js";
+import {
+    dowloadImageFullV3
+} from "../service/DowloadImageFullV3.js";
 
 import { readExcelFile } from "../service/openFileExcel.js";
 
@@ -63,6 +69,34 @@ async function processSingleAcc(accName) {
                 '',
                 'resize-(jpeg|webp):\\d+:\\d+\\.[a-z]+\\?[^\\s]*',
                 'origin-jpeg.jpeg');
+        } else if (product["Link"].toLowerCase().includes("amazon")) {
+            await dowloadImageFullV2(
+                page,
+                product,
+                'div h1#title',
+                'div h1#title',
+                'div#altImages ul.a-unordered-list li span span.a-button-inner input.a-button-input',
+                'li.image span.a-list-item span.a-declarative div.imgTagWrapper img.a-dynamic-image',
+                'li.dimension-value-list-item-square-image',
+                'li.dimension-value-list-item-square-image',
+                '',
+                '',
+                '[A-Z]\\d+_',
+                '');
+        } else if (product["Link"].toLowerCase().includes("shopee")) {
+            await dowloadImageFullV3(
+                page,
+                product,
+                'div h1',
+                'div h1',
+                'div#modal div.flex div picture img',
+                'div#modal div.flex div picture img',
+                'section div div button picture img',
+                'section div div button picture img',
+                '',
+                '',
+                '@.*$',
+                '@resize_w8200_nl.jpg');
         }
 
         // Đóng các tab phụ, giữ tab đầu tiên

@@ -11,7 +11,7 @@ import {
 } from "../service/ConfirmService.js";
 import path from "path";
 
-export async function dowloadImageBasic(page,product,elementTitle1,elementTitle2,elementMainImage1,elementMainImage2,elementSecurity,textCheckSecurity,inputChange,outputChange) {
+export async function dowloadImageFullV2(page,product,elementTitle1,elementTitle2,elementMainImage1,elementMainImage2,elementMainImageVersion1,elementMainImageVersion2,elementSecurity,textCheckSecurity,inputChange,outputChange) {
     // console.log(`[${moment().format('HH:mm:ss')}] Đang xử lý sản phẩm Etsy...`);
     await delayTime(2000);
 
@@ -42,25 +42,7 @@ export async function dowloadImageBasic(page,product,elementTitle1,elementTitle2
             .replace(/\s+/g, ' ')
             .substring(0, 100); // Giới hạn để tránh lỗi path quá dài
 
-        let linkProduct = await product["Link"].toLowerCase();
-        if (linkProduct.includes("shopee")) {
-            await scrollAndClickElementByIndex(page,'div.airUhU div.UBG7wZ',3);
-            await delayTime(2000);
-        }
-        // 3. Lấy link ảnh
-        let listboxImgsSelector = await elementMainImage1;
-        let elementImage = await page.$$(listboxImgsSelector);
-        if (elementImage.length <= 0) {
-            listboxImgsSelector = await elementMainImage2;
-            elementImage = await page.$$(listboxImgsSelector);
-            if (elementImage.length <= 0) {
-                listboxImgsSelector = "div#photos ul.wt-list-unstyled li img";
-            }
-        }
-
-        const { raw, clean } = await extractImageUrls(page, listboxImgsSelector,inputChange,outputChange);
-        const maxImgs = Number.isFinite(Number(product["max"])) ? Number(product["max"]) : 9999;
-
+        let listVersion = await page.$$(elementMainImageVersion1);
         // 4. XỬ LÝ ĐƯỜNG DẪN VÀ ĐÁNH SỐ THỨ TỰ (STT)
         const subFolder = product["Folder"] === 'notData' ? '' : `/${product["Folder"]}`;
         const parentPath = path.resolve(`../../Output/dowloadImage${subFolder}`);
@@ -75,13 +57,30 @@ export async function dowloadImageBasic(page,product,elementTitle1,elementTitle2
         // 5. Đảm bảo thư mục tồn tại và tải ảnh
         await ensureDirIfMissing(outputRoot);
 
-        const list = await downloadImagesToFolder(
-            clean.slice(0, maxImgs),
-            outputRoot,
-            { retries: 2, delayMs: 50 }
-        );
+        for(let i = 0;i<listVersion.length;i++) {
+            await scrollAndClickElementByIndex(page,elementMainImageVersion1,i);
+            await delayTime(2000);
 
-        console.log(`Đã tải xong ${list.length} ảnh vào: ${folderName}`);
+            let listImageMain= await page.$$(elementMainImage1);
+            for (let n = 0;n<listImageMain.length;n++) {
+                await scrollAndClickElementByIndex(page,elementMainImage1,n);
+                await delayTime(2000);
+            }
+
+            // 3. Lấy link ảnh
+            let listboxImgsSelector = await elementMainImage2;
+            const { raw, clean } = await extractImageUrls(page, listboxImgsSelector,inputChange,outputChange);
+            const maxImgs = Number.isFinite(Number(product["max"])) ? Number(product["max"]) : 9999;
+
+            const list = await downloadImagesToFolder(
+                clean.slice(0, maxImgs),
+                outputRoot+`/version_${i}`,
+                { retries: 2, delayMs: 50 }
+            );
+            console.log(`Đã tải xong ${list.length} ảnh vào: ${folderName}`);
+
+        }
+
 
     } catch (error) {
         console.log('Có lỗi xảy ra với sản phẩm Etsy:');

@@ -121,6 +121,18 @@ async function processSingleAcc(accName) {
                 '',
                 '70x91',
                 '2000x2300');
+        } else if (product["Link"].toLowerCase().includes("shopee")) {
+            await dowloadImageBasic(
+                page,
+                product,
+                'div h1',
+                'div h1',
+                'div#modal div.flex div picture img',
+                '',
+                '',
+                '',
+                '@.*$',
+                '@resize_w8200_nl.jpg');
         }
 
         // Đóng các tab phụ, giữ tab đầu tiên
