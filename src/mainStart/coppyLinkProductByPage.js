@@ -58,6 +58,15 @@ async function processSingleAcc(accName) {
                 'div div a.group',
                 1,
                 'div button.px-24.py-13.w-fit.min-w-128');
+        } else if (product["Link"].toLowerCase().includes("bluntcases")) {
+            await coppyLink(
+                page,
+                product,
+                '',
+                '',
+                'h3.card__heading.h5 a',
+                1,
+                'a[aria-label="Next page"]');
         }
 
         // Đóng các tab phụ, giữ tab đầu tiên

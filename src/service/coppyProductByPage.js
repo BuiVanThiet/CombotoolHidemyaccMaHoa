@@ -41,23 +41,32 @@ export async function coppyLink(page,product,elementSecurity,textCheckSecurity,e
             let countElementA = await countElements(page,elementA);
             console.log('maxProduct: '+maxProduct)
             console.log('countElementA: '+countElementA)
+
+            const listLink = await getLinks(page,elementA);
+            for (let linkAdd of listLink) {
+                if (!savedLinks.has(linkAdd)) {
+                    await savedLinks.add(linkAdd);
+                    await result.push(linkAdd);
+                }
+                if (result.length == maxProduct) {
+                    break;
+                }
+            }
+
             if (countElementA >= maxProduct) {
                 break;
             } else {
                 if (checkPage === 1) {
-                    await scrollAndClickElement(page,elementNext);
+                    let checkElementNext = await page.$$(elementNext);
+                    if (checkElementNext.length > 0) {
+                        await scrollAndClickElement(page,elementNext);
+                        await delayTime(3000);
+                    } else {
+                        break;
+                    }
                 }
             }
-        }
-        const listLink = await getLinks(page,elementA);
-        for (let linkAdd of listLink) {
-            if (!savedLinks.has(linkAdd)) {
-                await savedLinks.add(linkAdd);
-                await result.push(linkAdd);
-            }
-            if (result.length == maxProduct) {
-                break;
-            }
+
         }
 
         for (let linkW of result) {

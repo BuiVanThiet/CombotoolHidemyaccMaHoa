@@ -1572,7 +1572,7 @@ export async function extractImageUrls(page, selector, inputChange = null, outpu
     const clean = [];
 
     const imgs = await page.locator(selector).elementHandles();
-
+    let max = 1;
     for (const img of imgs) {
 
         const src = await img.evaluate((el) => {
@@ -1623,7 +1623,7 @@ export async function extractImageUrls(page, selector, inputChange = null, outpu
 
         // replace giống code Java
         if (inputChange && outputChange) {
-            absSrc = absSrc.replace(new RegExp(inputChange, "g"), outputChange);
+            absSrc = await absSrc.replace(new RegExp(inputChange, "g"), outputChange);
         }
 
         // ===== custom xử lý domain =====
@@ -1640,7 +1640,7 @@ export async function extractImageUrls(page, selector, inputChange = null, outpu
 
             } else {
 
-                const basePart = absSrc.split('~')[0];
+                const basePart = await absSrc.split('~')[0];
                 absSrc = `${basePart}~tplv-fhlh96nyum-origin-jpeg.jpeg`;
 
             }
@@ -1650,7 +1650,7 @@ export async function extractImageUrls(page, selector, inputChange = null, outpu
             const pattern = /il_\d+x[\dN]+/;
 
             if (pattern.test(absSrc)) {
-                absSrc = absSrc.replace(pattern, 'il_fullxfull');
+                absSrc =await absSrc.replace(pattern, 'il_fullxfull');
             }
 
         } else if (absSrc.includes('aliexpress-media')) {
@@ -1658,14 +1658,17 @@ export async function extractImageUrls(page, selector, inputChange = null, outpu
             const pattern = /(_\d+x\d+.*|_\.webp|_\.avif)$/;
 
             if (pattern.test(absSrc)) {
-                absSrc = absSrc.replace(pattern, '');
+                absSrc = await absSrc.replace(pattern, '');
             }
 
         }
 
-        raw.push(absSrc);
-        clean.push(stripQuery(absSrc));
-
+        await raw.push(absSrc);
+        await clean.push(stripQuery(absSrc));
+        await max++;
+        if (max >= 100) {
+            break;
+        }
     }
 
     return {

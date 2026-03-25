@@ -47,7 +47,7 @@ async function processSingleAcc(accName) {
         const page = await openPage(
             context,
             product["Link"],
-            { waitUntil: "load", timeout: 120000 }
+            { waitUntil: "load", timeout: 320000 }
         );
         if (product["Link"].toLowerCase().includes("temu")) {
             await dowloadImageBasic(
@@ -97,19 +97,8 @@ async function processSingleAcc(accName) {
                 'Just a moment',
                 'il_\\d+x\\d+',
                 'il_fullxfull');
-        } else if (product["Link"].toLowerCase().includes("aliexpress")) {
-            await dowloadImageBasic(
-                page,
-                product,
-                'div.title--wrap--UUHae_g h1',
-                'div h1',
-                'div.slider--img--kD4mIg7 img',
-                'img.magnifier--image--RM17RL2',
-                'p.captcha__human__title',
-                'Just a moment...',
-                '_\\d+x\\d+q\\d+\\.jpg_\\.avif',
-                '');
         } else if (product["Link"].toLowerCase().includes("sheshow")) {
+            console.log('sheshow da vao')
             await dowloadImageBasic(
                 page,
                 product,
@@ -122,6 +111,7 @@ async function processSingleAcc(accName) {
                 '70x91',
                 '2000x2300');
         } else if (product["Link"].toLowerCase().includes("shopee")) {
+            console.log('shopee da vao')
             await dowloadImageBasic(
                 page,
                 product,
@@ -133,6 +123,84 @@ async function processSingleAcc(accName) {
                 '',
                 '@.*$',
                 '@resize_w8200_nl.jpg');
+        } else if (product["Link"].toLowerCase().includes("burga")) {
+            console.log('burga da vao')
+            await dowloadImageBasic(
+                page,
+                product,
+                'div h1',
+                'div h1',
+                'div.js-prod-image-gallery-thumbs-carousel-container.embla div.embla__container button img',
+                '',
+                '',
+                '',
+                '\\?v=.*',
+                '');
+        } else if (product["Link"].toLowerCase().includes("bluntcases")) {
+            console.log('bluntcases da vao')
+            await dowloadImageBasic(
+                page,
+                product,
+                'div h1',
+                'div h1',
+                'ul li.thumbnail-list__item button.global-media-settings--no-shadow img',
+                '',
+                '',
+                '',
+                '\\?v=.*',
+                '');
+        } else if (product["Link"].toLowerCase().includes("aliexpress")) {
+            console.log('aliexpress da vao')
+            await dowloadImageBasic(
+                page,
+                product,
+                'div.pdp-info-right div h1[data-pl="product-title"]',
+                'div.pdp-info-right div h1[data-pl="product-title"]',
+                'div.pdp-info-left div img',
+                '',
+                '',
+                '',
+                '220x220',
+                '2200x2200');
+        } else if (product["Link"].toLowerCase().includes("printerval")) {
+            console.log('aliexpress da vao')
+            await dowloadImageBasic(
+                page,
+                product,
+                'h1.js-product-name',
+                'h1.js-product-name',
+                'div.gallery-nav-item.max-height img',
+                'div.product-gallery-item-image.product-gallery-item-img img',
+                '',
+                '',
+                '/\\d+x\\d+/g',
+                '2200x2200');
+        } else if (product["Link"].toLowerCase().includes("getcasely")) {
+            console.log('aliexpress da vao')
+            await dowloadImageBasic(
+                page,
+                product,
+                'div.title h1',
+                'div.title h1',
+                'div picture img.product__image',
+                '',
+                '',
+                '',
+                '\\?v=.*',
+                '');
+        } else if (product["Link"].toLowerCase().includes("velvetcaviar")) {
+            console.log('aliexpress da vao')
+            await dowloadImageBasic(
+                page,
+                product,
+                'div h1',
+                'div h1',
+                'div.keen-slider.thumbnail div.keen-slider__slide img.h-full',
+                'div.keen-slider.thumbnail div.keen-slider__slide img.h-full',
+                '',
+                '',
+                '\\?v=.*',
+                '');
         }
 
         // Đóng các tab phụ, giữ tab đầu tiên
